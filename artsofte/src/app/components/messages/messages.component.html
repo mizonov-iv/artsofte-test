@@ -1,0 +1,124 @@
+<div class="container mt-4 wrapper">
+  <div class="py-2 border-bottom">
+    <h2 class="fw-light">Голосовая почта</h2>
+  </div>
+
+  <div class="d-flex flex-row justify-content-between align-items-center my-4">
+    <!-- Фильтрация -->
+    <form class="row g-2 mb-4 flex-nowrap">
+      <!-- По периоду получения -->
+      <div class="col-md-6">
+        <label class="form-label fw-bold">Период</label>
+        <select class="form-select px-2 py-3" [(ngModel)]="filter.period" name="period" (change)="onFilterChange()">
+          <option value="Все время">Все время</option>
+          <option value="Сегодня">Сегодня</option>
+          <option value="Вчера">Вчера</option>
+        </select>
+      </div>
+
+      <!-- По отправителю -->
+      <div class="col-md-6">
+        <label class="form-label fw-bold">Номер</label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-search"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control px-2 py-3"
+            placeholder="Введите номер"
+            [(ngModel)]="filter.fromNumber"
+            name="fromNumber"
+            (input)="onFilterChange()"
+          />
+        </div>
+      </div>
+
+      <!-- По длительности -->
+      <div class="col-md-6">
+        <label class="form-label fw-bold">Длительность</label>
+        <select class="form-select px-2 py-3" [(ngModel)]="filter.duration" name="duration" (change)="onFilterChange()">
+          <option [ngValue]="0">Любая</option>
+          <option [ngValue]="60">до 1 минуты</option>
+          <option [ngValue]="180">до 3 минут</option>
+          <option [ngValue]="300">до 5 минут</option>
+          <option [ngValue]="600">до 10 минут</option>
+        </select>
+      </div>
+    </form>
+
+    <!-- Кнопка сброса фильтров -->
+    <button class="btn btn-outline-primary px-4 py-3" (click)="resetFilter()" type="button">Сбросить фильтр</button>
+  </div>
+
+  <!-- Спиннер -->
+  <div *ngIf="loading" class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+
+  <!-- Если нет сообщений -->
+  <div *ngIf="!loading && filteredMessages.length === 0" class="alert alert-info">
+    Нет сообщений.
+  </div>
+
+  <!-- Таблица с сообщениями -->
+  <div *ngIf="!loading && filteredMessages.length > 0">
+    <table class="table table-sm table-striped align-middle table-borderless table-hover">
+      <thead class="thead-light">
+      <tr class="table-border">
+        <th class="fw-bold">Дата</th>
+        <th class="fw-bold">Номер</th>
+        <th class="fw-bold">Запись сообщения</th>
+        <th></th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody class="table-group-divider">
+      <tr *ngFor="let msg of pagedMessages">
+        <td>{{ msg.received | date: 'dd.MM.yyyy HH:mm' }}</td>
+        <td>{{ msg.from }}</td>
+        <td>
+          <audio [src]="msg.audioUrl" controls></audio>
+        </td>
+        <td class="fw-medium">
+          {{ formatDuration(msg.duration) }}
+        </td>
+        <td>
+          <a
+            [href]="msg.audioUrl"
+            download
+            class="btn btn-sm btn-outline-dark border-0"
+          >
+            <i class="bi bi-download"></i>
+          </a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- Пагинация -->
+    <nav *ngIf="totalPages > 1" aria-label="Page navigation">
+      <ul class="pagination justify-content-between col-5 mx-auto">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <button class="page-link" (click)="goToPage(currentPage - 1)" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </button>
+        </li>
+
+        <li
+          class="page-item"
+          *ngFor="let page of [].constructor(totalPages); let i = index"
+          [class.active]="currentPage === i + 1"
+        >
+          <button class="page-link border-0" (click)="goToPage(i + 1)">{{ i + 1 }}</button>
+        </li>
+
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <button class="page-link" (click)="goToPage(currentPage + 1)" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
